@@ -21,6 +21,18 @@ struct Block {
     direction   : MoveDirection
 }
 
+impl Block {
+    /// A constructor. Returns a new block with the start value, end value, 
+    /// and direction specified via the parameters.
+    fn new(start: u16, end: u16, direction: MoveDirection) -> Self {
+        Block {
+            start,
+            end,
+            direction
+        }
+    }
+}
+
 fn main() {
     println!("Hello, world!");
 }
