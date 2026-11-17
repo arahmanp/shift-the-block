@@ -69,6 +69,24 @@ impl Block {
     }
 }
 
+/// The structure of a board in the game.
+#[derive(Debug)]
+struct Board {
+    /// Current active block that can be controlled by the player.
+    current_block: Block,
+
+    /// An already placed block before current block.
+    prev_block: Block,
+
+    /// Current active row player working at.
+    active_row: u16,
+
+    /// A flag to check whether a block is just placed on the board. 
+    /// We need this because a new block has different rendering pipeline 
+    /// with older one.
+    placed_new_block: bool
+}
+
 fn main() {
     //
 }
