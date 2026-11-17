@@ -31,6 +31,33 @@ impl Block {
             direction
         }
     }
+
+    /// A method that handles the block movement. In each shift, the block will 
+    /// move one step either to the left or right, depends on its current direction. 
+    /// This operation also depends on window width, because the block must know it for 
+    /// direction switching.
+    fn shift(&mut self, window_width: u16) {
+        // Switch the direction when touching left and right window edge
+        if self.direction == MoveDirection::Left && self.start == 0 {
+            self.direction = MoveDirection::Right;
+        }
+
+        if self.direction == MoveDirection::Right && self.end == window_width {
+            self.direction = MoveDirection::Left;
+        }
+
+        // Shift the block based on its direction
+        match self.direction {
+            MoveDirection::Left => {
+                self.start -= 1;
+                self.end -= 1;
+            },
+            MoveDirection::Right => {
+                self.start += 1;
+                self.end += 1;
+            }
+        }
+    }
 }
 
 fn main() {
