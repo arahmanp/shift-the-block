@@ -16,8 +16,13 @@ enum MoveDirection {
 /// The structure of a single block.
 #[derive(Debug)]
 struct Block {
+    /// Starting column position of a block.
     start       : u16,
+
+    /// Column position where the block ends.
     end         : u16,
+
+    /// Current block movement direction.
     direction   : MoveDirection
 }
 
