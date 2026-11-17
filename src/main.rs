@@ -78,7 +78,7 @@ struct Board {
     /// An already placed block before current block.
     prev_block: Block,
 
-    /// Current active row player working at.
+    /// The row in which the player is currently active.
     active_row: u16,
 
     /// A flag to check whether a block is just placed on the board. 
