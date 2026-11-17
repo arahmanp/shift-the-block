@@ -6,14 +6,14 @@
 //! 
 //! This is the original source code of Shift the Block! Game.
 
-/// Define directions of block movement
+/// Define directions of block movement.
 #[derive(PartialEq, Debug)]
 enum MoveDirection {
     Left,
     Right
 }
 
-/// The structure of a single block
+/// The structure of a single block.
 #[derive(Debug)]
 struct Block {
     start       : u16,
