@@ -6,6 +6,10 @@
 //! 
 //! This is the original source code of Shift the Block! Game.
 
+// Define window size
+const WIDTH: u16 = 64;
+const HEIGHT: u16 = 27;     // Board (24) + Header (2) + Separator (1)
+
 /// Define directions of block movement.
 #[derive(PartialEq, Debug)]
 enum MoveDirection {
