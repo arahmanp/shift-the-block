@@ -80,13 +80,13 @@ struct Board {
     /// An already placed block before current block.
     prev_block: Block,
 
-    /// The row in which the player is currently active.
-    active_row: u16,
+    /// A counter represents how many blocks are already placed.
+    counter: u16,
 
     /// A flag to check whether a block is just placed on the board. 
     /// We need this because a new block has different rendering pipeline 
     /// with older one.
-    placed_new_block: bool
+    is_just_placed_new_block: bool
 }
 
 impl Board {
@@ -101,11 +101,11 @@ impl Board {
             // with dummy values
             prev_block: Block::new(0, 0, MoveDirection::Right),
 
-            // Start a row 1
-            active_row: 1,
+            // Player did not place any block yet at the beginning of the game
+            counter: 0,
 
             // Yes, we just placed the first block
-            placed_new_block: true
+            is_just_placed_new_block: true
         }
     }
 
