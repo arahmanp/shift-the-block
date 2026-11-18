@@ -17,14 +17,21 @@ const WIDTH: u16 = 64;
 const HEIGHT: u16 = 27;     // Board (24) + Header (2) + Separator (1)
 
 /// Define directions of block movement.
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 enum MoveDirection {
     Left,
     Right
 }
 
-/// The structure of a single block.
+/// Define the possible result when player placed a block
 #[derive(Debug)]
+enum PlaceResult {
+    Continue,
+    Stop
+}
+
+/// The structure of a single block.
+#[derive(Debug, Clone, Copy)]
 struct Block {
     /// Starting column position of a block.
     start       : u16,
@@ -174,6 +181,30 @@ impl Board {
         stdout.flush()?;
 
         Ok(())
+    }
+
+    /// A function to handle event when player places a block
+    fn place_block(&mut self) -> PlaceResult {
+        // In this condition, player loses
+        if self.current_block.start > self.prev_block.end {
+            return PlaceResult::Stop;
+        }
+
+        // Increase the counter
+        self.counter += 1;
+
+        // Copy the current_block to prev_block
+        let tmp = self.current_block;
+
+        // Create new block with new size
+        self.current_block = Block::new(
+            0,
+            self.prev_block.end - self.current_block.start,
+            MoveDirection::Right
+        );
+        self.prev_block = tmp;
+
+        PlaceResult::Continue
     }
 }
 
