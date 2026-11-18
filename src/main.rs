@@ -230,7 +230,7 @@ fn main() -> io::Result<()> {
     // Let's test the board!
 
     // Define frame delay
-    let delay: u64 = 512;
+    let mut delay: u64 = 512;
 
     // Create new board
     let mut board = Board::new();
@@ -254,6 +254,8 @@ fn main() -> io::Result<()> {
                         if result == PlaceResult::Stop {
                             break;
                         }
+
+                        delay /= 2;
                     },
                     KeyCode::Char('q') => break,
                     _ => {}
@@ -270,6 +272,11 @@ fn main() -> io::Result<()> {
 
     // Disable raw mode
     terminal::disable_raw_mode()?;
+
+    // Clear screen and move cursor to (0, 0) before closing the game
+    io::stdout()
+        .execute(terminal::Clear(terminal::ClearType::All))?
+        .execute(cursor::MoveTo(0, 0))?;
 
     Ok(())
 }
