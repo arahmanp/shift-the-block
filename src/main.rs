@@ -160,11 +160,11 @@ impl Board {
             let (prev_col, new_col) = match self.current_block.direction {
                 MoveDirection::Left => (
                     self.current_block.end + 1,
-                    self.current_block.start - 1
+                    self.current_block.start
                 ),
                 MoveDirection::Right => (
                     self.current_block.start - 1,
-                    self.current_block.end + 1,
+                    self.current_block.end,
                 )
             };
 
