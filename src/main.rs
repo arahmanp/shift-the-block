@@ -29,7 +29,12 @@ struct Block {
     end         : u16,
 
     /// Current block movement direction.
-    direction   : MoveDirection
+    direction   : MoveDirection,
+
+    /// A flag to check whether a block is just placed on the board. 
+    /// We need this because a new block has different rendering pipeline 
+    /// with older one.
+    is_just_placed: bool
 }
 
 impl Block {
@@ -39,7 +44,8 @@ impl Block {
         Block {
             start,
             end,
-            direction
+            direction,
+            is_just_placed: true
         }
     }
 
