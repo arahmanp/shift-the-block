@@ -6,6 +6,10 @@
 //! 
 //! This is the original source code of Shift the Block! Game.
 
+use std::io::{self, Write};
+
+use crossterm::{QueueableCommand, cursor, style::{self, Stylize}};
+
 /// Width of the window required for the game.
 const WIDTH: u16 = 64;
 
@@ -89,10 +93,6 @@ struct Board {
     /// A counter represents how many blocks are already placed.
     counter: u16,
 
-    /// A flag to check whether a block is just placed on the board. 
-    /// We need this because a new block has different rendering pipeline 
-    /// with older one.
-    is_just_placed_new_block: bool
 }
 
 impl Board {
@@ -109,15 +109,71 @@ impl Board {
 
             // Player did not place any block yet at the beginning of the game
             counter: 0,
-
-            // Yes, we just placed the first block
-            is_just_placed_new_block: true
         }
     }
 
     /// A function to do shift operation to the active block.
     fn shift_block(&mut self) {
         self.current_block.shift();
+    }
+
+    /// A function to render the board to the terminal.
+    // The correct order of execution: process input -> update state (shift the block) -> render
+    fn render(&mut self) -> io::Result<()> {
+        // We use Lazy Execution in crossterm for performance purpose
+
+        // Access the stdout
+        let mut stdout = io::stdout();
+
+        // Which row the renderer will start to draw the pixels
+        let start_row = HEIGHT - 2 * (self.counter + 1);
+
+        // The new, just placed, block has different render handling
+        // And also for block which has one character width (start = end)
+        if self.current_block.is_just_placed || self.current_block.start == self.current_block.end {
+            for row in start_row..=(start_row + 1) {
+                for col in (self.current_block.start)..=(self.current_block.end) {
+                    stdout
+                        .queue(cursor::MoveTo(col, row))?
+                        .queue(style::PrintStyledContent(" ".on_white()))?;
+                }
+            }
+
+            // Flag current block has been rendered before
+            // This is fine for already rendered, 1-character width, block
+            self.current_block.is_just_placed = false;
+        } else {
+            // We use algorithm called "Lazy Rendering" (i named it by myself 😁)
+            // The idea is simple: We don't redraw all blocks from scratch in every frame
+            // instead, we just render the current active block. Because all previous blocks
+            // won't move again in the future. We also optimize again the rendering process, by
+            // just redrawing the previous column and the new one, we can ignore pixel between them.
+            // However, this only can be applicated for a block which has width more than one character
+            // ie. start != end
+            let (prev_col, new_col) = match self.current_block.direction {
+                MoveDirection::Left => (
+                    self.current_block.end + 1,
+                    self.current_block.start - 1
+                ),
+                MoveDirection::Right => (
+                    self.current_block.start - 1,
+                    self.current_block.end + 1,
+                )
+            };
+
+            for row in start_row..=(start_row + 1) {
+                stdout
+                    .queue(cursor::MoveTo(prev_col, row))?
+                    .queue(style::Print(" "))?
+                    .queue(cursor::MoveTo(new_col, row))?
+                    .queue(style::PrintStyledContent(" ".on_white()))?;
+            }
+        }
+
+        // Flush the stdout to apply the queued commands
+        stdout.flush()?;
+
+        Ok(())
     }
 }
 
