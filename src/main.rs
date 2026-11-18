@@ -6,8 +6,10 @@
 //! 
 //! This is the original source code of Shift the Block! Game.
 
-// Define window size
+/// Width of the window required for the game.
 const WIDTH: u16 = 64;
+
+/// Height of the window required for the game.
 const HEIGHT: u16 = 27;     // Board (24) + Header (2) + Separator (1)
 
 /// Define directions of block movement.
