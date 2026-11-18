@@ -108,6 +108,11 @@ impl Board {
             placed_new_block: true
         }
     }
+
+    /// A function to do shift operation to the active block.
+    fn shift_block(&mut self) {
+        self.current_block.shift();
+    }
 }
 
 fn main() {
