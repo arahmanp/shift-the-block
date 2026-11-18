@@ -136,8 +136,7 @@ impl Board {
         let start_row = HEIGHT - 2 * (self.counter + 1);
 
         // The new, just placed, block has different render handling
-        // And also for block which has one character width (start = end)
-        if self.current_block.is_just_placed || self.current_block.start == self.current_block.end {
+        if self.current_block.is_just_placed {
             for row in start_row..=(start_row + 1) {
                 for col in (self.current_block.start)..=(self.current_block.end) {
                     stdout
@@ -147,7 +146,6 @@ impl Board {
             }
 
             // Flag current block has been rendered before
-            // This is fine for already rendered, 1-character width, block
             self.current_block.is_just_placed = false;
         } else {
             // We use algorithm called "Lazy Rendering" (i named it by myself 😁)
@@ -155,8 +153,6 @@ impl Board {
             // instead, we just render the current active block. Because all previous blocks
             // won't move again in the future. We also optimize again the rendering process, by
             // just redrawing the previous column and the new one, we can ignore pixel between them.
-            // However, this only can be applicated for a block which has width more than one character
-            // ie. start != end
             let (prev_col, new_col) = match self.current_block.direction {
                 MoveDirection::Left => (
                     self.current_block.end + 1,
