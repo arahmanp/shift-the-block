@@ -6,9 +6,9 @@
 //! 
 //! This is the original source code of Shift the Block! Game.
 
-use std::io::{self, Write};
+use std::{io::{self, Write}, thread::sleep, time::Duration};
 
-use crossterm::{QueueableCommand, cursor, style::{self, Stylize}};
+use crossterm::{QueueableCommand, cursor, event::{self, Event, KeyCode}, style::{self, Stylize}, terminal};
 
 /// Width of the window required for the game.
 const WIDTH: u16 = 64;
@@ -24,7 +24,7 @@ enum MoveDirection {
 }
 
 /// Define the possible result when player placed a block
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum PlaceResult {
     Continue,
     Stop
@@ -208,6 +208,50 @@ impl Board {
     }
 }
 
-fn main() {
-    //
+fn main() -> io::Result<()> {
+    // Let's test the board!
+
+    // Define frame delay
+    let delay: u64 = 1024;
+
+    // Create new board
+    let mut board = Board::new();
+
+    // Enable raw mode
+    terminal::enable_raw_mode()?;
+
+    // Set terminal size to WIDTH x HEIGHT
+    terminal::SetSize(WIDTH, HEIGHT);
+
+    // Render board for the first time
+    board.render()?;
+
+    loop {
+        if event::poll(Duration::from_millis(0))? {
+            if let Event::Key(k) = event::read()? {
+                match k.code {
+                    KeyCode::Enter => {
+                        let result = board.place_block();
+
+                        if result == PlaceResult::Stop {
+                            break;
+                        }
+                    },
+                    KeyCode::Char('q') => break,
+                    _ => {}
+                }
+            }
+        }
+
+        board.shift_block();
+
+        board.render()?;
+
+        sleep(Duration::from_millis(delay));
+    }
+
+    // Disable raw mode
+    terminal::disable_raw_mode()?;
+
+    Ok(())
 }
