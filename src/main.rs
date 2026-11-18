@@ -207,7 +207,7 @@ impl Board {
 
             self.current_block = Block::new(
                 0,
-                intersection_len - 1,
+                intersection_len,
                 MoveDirection::Right
             );
 
