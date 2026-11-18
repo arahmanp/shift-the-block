@@ -173,6 +173,10 @@ impl Board {
             }
         }
 
+        // Everytime rendering process done, move cursor to the inside of current block
+        // Look is important too!
+        stdout.queue(cursor::MoveTo(self.current_block.start, start_row))?;
+
         // Flush the stdout to apply the queued commands
         stdout.flush()?;
 
