@@ -185,32 +185,40 @@ impl Board {
 
     /// A function to handle event when player places a block
     fn place_block(&mut self) -> PlaceResult {
+        // If counter = 0, any block placement is valid and allowed
         if self.counter == 0 {
             self.counter += 1;
 
+            // Set previous block to current block
             self.prev_block = self.current_block;
 
+            // Create new block with same size as the first block
             self.current_block = Block::new(0, WIDTH / 2 - 1, MoveDirection::Right);
 
             return PlaceResult::Continue;
         } else {
             self.counter += 1;
 
+            // Check whether intersection occurs
             if cmp::max(self.current_block.start, self.prev_block.start) > cmp::min(self.current_block.end, self.prev_block.end) {
                 return PlaceResult::Stop;
             }
 
+            // Get the length of intersection
             let intersection_len = cmp::min(self.current_block.end, self.prev_block.end) - 
-                cmp::max(self.current_block.start, self.prev_block.start);
+                cmp::max(self.current_block.start, self.prev_block.start) + 1;
 
+            // Save state of current block to a temporary variable
             let tmp = self.current_block;
 
+            // Create new block, start at position 0 with length intersection_length
             self.current_block = Block::new(
                 0,
-                intersection_len,
+                intersection_len - 1,
                 MoveDirection::Right
             );
 
+            // Set previous block to current block
             self.prev_block = tmp;
 
             return PlaceResult::Continue;
