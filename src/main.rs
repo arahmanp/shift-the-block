@@ -6,9 +6,9 @@
 //! 
 //! This is the original source code of Shift the Block! Game.
 
-use std::{io::{self, Write}, thread::sleep, time::Duration};
+use std::{cmp, io::{self, Write}, thread::sleep, time::Duration};
 
-use crossterm::{QueueableCommand, cursor, event::{self, Event, KeyCode}, style::{self, Stylize}, terminal};
+use crossterm::{ExecutableCommand, QueueableCommand, cursor, event::{self, Event, KeyCode}, style::{self, Stylize}, terminal};
 
 /// Width of the window required for the game.
 const WIDTH: u16 = 64;
@@ -185,26 +185,36 @@ impl Board {
 
     /// A function to handle event when player places a block
     fn place_block(&mut self) -> PlaceResult {
-        // In this condition, player loses
-        if self.current_block.start > self.prev_block.end {
-            return PlaceResult::Stop;
+        if self.counter == 0 {
+            self.counter += 1;
+
+            self.prev_block = self.current_block;
+
+            self.current_block = Block::new(0, WIDTH / 2 - 1, MoveDirection::Right);
+
+            return PlaceResult::Continue;
+        } else {
+            self.counter += 1;
+
+            if cmp::max(self.current_block.start, self.prev_block.start) > cmp::min(self.current_block.end, self.prev_block.end) {
+                return PlaceResult::Stop;
+            }
+
+            let intersection_len = cmp::min(self.current_block.end, self.prev_block.end) - 
+                cmp::max(self.current_block.start, self.prev_block.start);
+
+            let tmp = self.current_block;
+
+            self.current_block = Block::new(
+                0,
+                intersection_len - 1,
+                MoveDirection::Right
+            );
+
+            self.prev_block = tmp;
+
+            return PlaceResult::Continue;
         }
-
-        // Increase the counter
-        self.counter += 1;
-
-        // Copy the current_block to prev_block
-        let tmp = self.current_block;
-
-        // Create new block with new size
-        self.current_block = Block::new(
-            0,
-            self.prev_block.end - self.current_block.start,
-            MoveDirection::Right
-        );
-        self.prev_block = tmp;
-
-        PlaceResult::Continue
     }
 }
 
@@ -212,7 +222,7 @@ fn main() -> io::Result<()> {
     // Let's test the board!
 
     // Define frame delay
-    let delay: u64 = 1024;
+    let delay: u64 = 512;
 
     // Create new board
     let mut board = Board::new();
@@ -220,8 +230,8 @@ fn main() -> io::Result<()> {
     // Enable raw mode
     terminal::enable_raw_mode()?;
 
-    // Set terminal size to WIDTH x HEIGHT
-    terminal::SetSize(WIDTH, HEIGHT);
+    // Clear screen
+    io::stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
     // Render board for the first time
     board.render()?;
