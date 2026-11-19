@@ -130,7 +130,7 @@ impl Board {
         // Determine which row the renderer will start to draw the pixels
         let start_row = HEIGHT - 2 * (self.counter + 1);
 
-        // Start draw new block
+        // Start draw the first block
         for row in start_row..=(start_row + 1) {
             for col in (self.current_block.start)..=(self.current_block.end) {
                 stdout
