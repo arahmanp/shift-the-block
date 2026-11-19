@@ -109,9 +109,8 @@ impl Board {
     /// A constructor. Returns a board with default value.
     fn new() -> Self {
         Board {
-            // The first block has width half of window width (or 32 character in this case)
-            // Start at column 0 and end at column WIDTH / 2 - 1 (start: 0, end: 31)
-            current_block: Block::new(0, WIDTH / 2 - 1, MoveDirection::Right),
+            // The first block has width 32 character. Start at column 0 and end at column 31
+            current_block: Block::new(0, 31, MoveDirection::Right),
 
             // Because there's no previous block in the first row, we just initialize the previous block
             // with dummy values
