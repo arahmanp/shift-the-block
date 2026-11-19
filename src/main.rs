@@ -120,14 +120,11 @@ impl Board {
     }
 
     /// A function to do shift operation to the active block.
-    fn shift_block(&mut self) {
+    fn shift_block(&mut self) -> io::Result<()> {
+        // Shift current block
         self.current_block.shift();
-    }
 
-    /// A function to render the board to the terminal.
-    // The correct order of execution: process input -> update state (shift the block) -> render
-    fn render(&mut self) -> io::Result<()> {
-        // We use Lazy Execution in crossterm for performance purpose
+        // Directly render new state
 
         // Access the stdout
         let mut stdout = io::stdout();
