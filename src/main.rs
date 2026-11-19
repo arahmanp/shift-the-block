@@ -128,6 +128,29 @@ impl Board {
         }
     }
 
+    /// A temporary function for first-time rendering.
+    fn start(&self) -> io::Result<()> {
+        // Access the standard output
+        let mut stdout = io::stdout();
+
+        // Determine which row the renderer will start to draw the pixels
+        let start_row = HEIGHT - 2 * (self.counter + 1);
+
+        // Start draw new block
+        for row in start_row..=(start_row + 1) {
+            for col in (self.current_block.start)..=(self.current_block.end) {
+                stdout
+                    .queue(cursor::MoveTo(col, row))?
+                    .queue(style::PrintStyledContent(" ".on_white()))?;
+            }
+        }
+
+        // Flush the standard output to apply commands
+        stdout.flush()?;
+        
+        Ok(())
+    }
+
     /// A function to do shift operation to the active block.
     fn shift_block(&mut self) -> io::Result<()> {
         // Shift current block
