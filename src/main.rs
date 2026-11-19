@@ -20,11 +20,11 @@ use crossterm::{
     terminal,
 };
 
-/// Width of the window required for the game.
-const WIDTH: u16 = 64;
+/// Width of the container required for the game.
+const WINDOW_WIDTH: u16 = 66; // Real used space (64) + border (1 * 2)
 
-/// Height of the window required for the game.
-const HEIGHT: u16 = 25; // Board (22) + Header (2) + Separator (1)
+/// Height of the container required for the game.
+const WINDOW_HEIGHT: u16 = 27; // Board (22) + Header (2) + Separator (1) + border (1 * 2)
 
 /// Define directions of block movement.
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -70,11 +70,11 @@ impl Block {
     /// direction switching.
     fn shift(&mut self) {
         // Switch the direction when touching left and right window edge
-        if self.direction == MoveDirection::Left && self.start == 0 {
+        if self.direction == MoveDirection::Left && self.start == 1 {
             self.direction = MoveDirection::Right;
         }
 
-        if self.direction == MoveDirection::Right && self.end == WIDTH - 1 {
+        if self.direction == MoveDirection::Right && self.end == WINDOW_WIDTH - 2 {
             self.direction = MoveDirection::Left;
         }
 
@@ -110,24 +110,24 @@ impl Board {
     fn new() -> Self {
         Board {
             // The first block has width 32 character. Start at column 0 and end at column 31
-            current_block: Block::new(0, 31, MoveDirection::Right),
+            current_block: Block::new(1, 32, MoveDirection::Right),
 
             // Because there's no previous block in the first row, we just initialize the previous block
             // with dummy values
-            prev_block: Block::new(0, 0, MoveDirection::Right),
+            prev_block: Block::new(1, 1, MoveDirection::Right),
 
             // Player did not place any block yet at the beginning of the game
             counter: 0,
         }
     }
 
-    /// A temporary function for first-time rendering.
+    /// A function for first-time board rendering.
     fn start(&self) -> io::Result<()> {
         // Access the standard output
         let mut stdout = io::stdout();
 
         // Determine which row the renderer will start to draw the pixels
-        let start_row = HEIGHT - 2 * (self.counter + 1);
+        let start_row = WINDOW_HEIGHT - 2 * (self.counter + 1) - 1;
 
         // Start draw the first block
         for row in start_row..=(start_row + 1) {
@@ -155,7 +155,7 @@ impl Board {
         let mut stdout = io::stdout();
 
         // Which row the renderer will start to draw the pixels
-        let start_row = HEIGHT - 2 * (self.counter + 1);
+        let start_row = WINDOW_HEIGHT - 2 * (self.counter + 1) - 1;
 
         // We use algorithm called "Lazy Rendering" (i named it by myself 😁)
         // The idea is simple: We don't redraw all blocks from scratch in every frame
@@ -197,7 +197,7 @@ impl Board {
             self.prev_block = self.current_block;
 
             // Create new block with same size as the first block
-            self.current_block = Block::new(0, 31, MoveDirection::Right);
+            self.current_block = Block::new(1, 32, MoveDirection::Right);
 
             // Increase the counter
             self.counter += 1;
@@ -209,7 +209,7 @@ impl Board {
                 // Mark dead block as red
 
                 // Get the current active row
-                let start_row = HEIGHT - 2 * (self.counter + 1);
+                let start_row = WINDOW_HEIGHT - 2 * (self.counter + 1) - 1;
 
                 // Redraw current block with red background
                 for row in start_row..=(start_row + 1) {
@@ -220,8 +220,8 @@ impl Board {
                     }
                 }
 
-                // Move cursor to (0, 0)
-                stdout.queue(cursor::MoveTo(0, 0))?;
+                // Move cursor to (0, WINDOW_HEIGHT)
+                stdout.queue(cursor::MoveTo(0, WINDOW_HEIGHT))?;
 
                 // Flush the standard output to apply commands
                 stdout.flush()?;
@@ -236,7 +236,7 @@ impl Board {
                 + 1;
 
             // Cut block outside the intersection
-            let start_row = HEIGHT - 2 * (self.counter + 1);
+            let start_row = WINDOW_HEIGHT - 2 * (self.counter + 1) - 1;
 
             if self.current_block.start < self.prev_block.start {
                 for row in start_row..=(start_row + 1) {
@@ -264,7 +264,7 @@ impl Board {
             let tmp = self.current_block;
 
             // Create new block, start at position 0 with length intersection_length
-            self.current_block = Block::new(0, intersection_len - 1, MoveDirection::Right);
+            self.current_block = Block::new(1, intersection_len, MoveDirection::Right);
 
             // Set previous block to current block
             self.prev_block = tmp;
@@ -276,7 +276,7 @@ impl Board {
         // Directly draw the new block
 
         // Determine which row the renderer will start to draw the pixels
-        let start_row = HEIGHT - 2 * (self.counter + 1);
+        let start_row = WINDOW_HEIGHT - 2 * (self.counter + 1) - 1;
 
         // Start draw new block
         for row in start_row..=(start_row + 1) {
@@ -294,6 +294,48 @@ impl Board {
     }
 }
 
+fn print_border() -> io::Result<()> {
+    let mut stdout = io::stdout();
+
+    stdout
+        .queue(cursor::MoveTo(0, 0))?
+        .queue(style::Print("┌"))?
+        .queue(cursor::MoveTo(WINDOW_WIDTH - 1, 0))?
+        .queue(style::Print("┐"))?
+        .queue(cursor::MoveTo(0, 4))?
+        .queue(style::Print("├"))?
+        .queue(cursor::MoveTo(WINDOW_WIDTH - 1, 4))?
+        .queue(style::Print("┤"))?
+        .queue(cursor::MoveTo(0, WINDOW_HEIGHT - 1))?
+        .queue(style::Print("└ "))?
+        .queue(cursor::MoveTo(WINDOW_WIDTH - 1, WINDOW_HEIGHT - 1))?
+        .queue(style::Print("┘"))?;
+
+    for col in 1..(WINDOW_WIDTH - 1) {
+        stdout
+            .queue(cursor::MoveTo(col, 0))?
+            .queue(style::Print("─"))?
+            .queue(cursor::MoveTo(col, 4))?
+            .queue(style::Print("─"))?
+            .queue(cursor::MoveTo(col, WINDOW_HEIGHT - 1))?
+            .queue(style::Print("─"))?;
+    }
+
+    for row in 1..(WINDOW_HEIGHT - 1) {
+        if row != 4 {
+            stdout
+                .queue(cursor::MoveTo(0, row))?
+                .queue(style::Print("│"))?
+                .queue(cursor::MoveTo(WINDOW_WIDTH - 1, row))?
+                .queue(style::Print("│"))?;
+        }
+    }
+
+    stdout.flush()?;
+
+    Ok(())
+}
+
 fn main() -> io::Result<()> {
     // Let's test the board!
 
@@ -308,6 +350,9 @@ fn main() -> io::Result<()> {
 
     // Clear screen
     io::stdout().execute(terminal::Clear(terminal::ClearType::All))?;
+
+    // Print window border
+    print_border()?;
 
     // Render board for the first time
     board.start()?;
