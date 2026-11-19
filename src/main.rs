@@ -196,7 +196,7 @@ impl Board {
             self.prev_block = self.current_block;
 
             // Create new block with same size as the first block
-            self.current_block = Block::new(0, WIDTH / 2 - 1, MoveDirection::Right);
+            self.current_block = Block::new(0, 31, MoveDirection::Right);
         } else {
             // Check whether intersection occurs
             if cmp::max(self.current_block.start, self.prev_block.start)
