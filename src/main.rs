@@ -263,14 +263,14 @@ fn main() -> io::Result<()> {
     io::stdout().execute(terminal::Clear(terminal::ClearType::All))?;
 
     // Render board for the first time
-    board.render()?;
+    board.start()?;
 
     loop {
         if event::poll(Duration::from_millis(0))? {
             if let Event::Key(k) = event::read()? {
                 match k.code {
                     KeyCode::Enter => {
-                        let result = board.place_block();
+                        let result = board.place_block()?;
 
                         if result == PlaceResult::Stop {
                             break;
@@ -284,9 +284,7 @@ fn main() -> io::Result<()> {
             }
         }
 
-        board.shift_block();
-
-        board.render()?;
+        board.shift_block()?;
 
         sleep(Duration::from_millis(delay));
     }
