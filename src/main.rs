@@ -24,7 +24,7 @@ use crossterm::{
 const WIDTH: u16 = 64;
 
 /// Height of the window required for the game.
-const HEIGHT: u16 = 27; // Board (24) + Header (2) + Separator (1)
+const HEIGHT: u16 = 25; // Board (22) + Header (2) + Separator (1)
 
 /// Define directions of block movement.
 #[derive(PartialEq, Debug, Clone, Copy)]
