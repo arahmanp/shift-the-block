@@ -51,11 +51,6 @@ struct Block {
 
     /// Current block movement direction.
     direction: MoveDirection,
-
-    /// A flag to check whether a block is just placed on the board.
-    /// We need this because a new block has different rendering pipeline
-    /// with older one.
-    is_just_placed: bool,
 }
 
 impl Block {
@@ -66,7 +61,6 @@ impl Block {
             start,
             end,
             direction,
-            is_just_placed: true,
         }
     }
 
@@ -147,7 +141,7 @@ impl Board {
 
         // Flush the standard output to apply commands
         stdout.flush()?;
-        
+
         Ok(())
     }
 
