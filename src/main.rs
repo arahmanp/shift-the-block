@@ -198,14 +198,38 @@ impl Board {
             // Create new block with same size as the first block
             self.current_block = Block::new(0, WIDTH / 2 - 1, MoveDirection::Right);
         } else {
-            self.counter += 1;
-
             // Check whether intersection occurs
             if cmp::max(self.current_block.start, self.prev_block.start)
                 > cmp::min(self.current_block.end, self.prev_block.end)
             {
+                // Mark dead block as red
+
+                // Access the standard output
+                let mut stdout = io::stdout();
+
+                // Get the current active row
+                let start_row = HEIGHT - 2 * (self.counter + 1);
+
+                // Redraw current block with red background
+                for row in start_row..=(start_row + 1) {
+                    for col in (self.current_block.start)..=(self.current_block.end) {
+                        stdout
+                            .queue(cursor::MoveTo(col, row))?
+                            .queue(style::PrintStyledContent(" ".on_red()))?;
+                    }
+                }
+
+                // Move cursor to (0, 0)
+                stdout.queue(cursor::MoveTo(0, 0))?;
+
+                // Flush the standard output to apply commands
+                stdout.flush()?;
+
+                // Return stop signal
                 return Ok(PlaceResult::Stop);
             }
+
+            self.counter += 1;
 
             // Get the length of intersection
             let intersection_len = cmp::min(self.current_block.end, self.prev_block.end)
@@ -272,6 +296,7 @@ fn main() -> io::Result<()> {
                         let result = board.place_block()?;
 
                         if result == PlaceResult::Stop {
+                            sleep(Duration::from_secs(5));
                             break;
                         }
 
