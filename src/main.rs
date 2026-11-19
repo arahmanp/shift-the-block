@@ -157,12 +157,12 @@ impl Board {
         // Which row the renderer will start to draw the pixels
         let start_row = HEIGHT - 2 * (self.counter + 1);
 
-        // The new, just placed, block has different render handling
         // We use algorithm called "Lazy Rendering" (i named it by myself 😁)
         // The idea is simple: We don't redraw all blocks from scratch in every frame
         // instead, we just render the current active block. Because all previous blocks
         // won't move again in the future. We can also optimize the rendering process, by
         // just redrawing the previous column and the new one, we can ignore pixel between them.
+        // However, a block must be fully drawn first to apply this rendering method
         let (prev_col, new_col) = match self.current_block.direction {
             MoveDirection::Left => (self.current_block.end + 1, self.current_block.start),
             MoveDirection::Right => (self.current_block.start - 1, self.current_block.end),
