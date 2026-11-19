@@ -188,24 +188,25 @@ impl Board {
 
     /// A function to handle event when player places a block
     fn place_block(&mut self) -> io::Result<PlaceResult> {
+        // Access the standard output
+        let mut stdout = io::stdout();
+
         // If counter = 0, any block placement is valid and allowed
         if self.counter == 0 {
-            self.counter += 1;
-
             // Set previous block to current block
             self.prev_block = self.current_block;
 
             // Create new block with same size as the first block
             self.current_block = Block::new(0, 31, MoveDirection::Right);
+
+            // Increase the counter
+            self.counter += 1;
         } else {
             // Check whether intersection occurs
             if cmp::max(self.current_block.start, self.prev_block.start)
                 > cmp::min(self.current_block.end, self.prev_block.end)
             {
                 // Mark dead block as red
-
-                // Access the standard output
-                let mut stdout = io::stdout();
 
                 // Get the current active row
                 let start_row = HEIGHT - 2 * (self.counter + 1);
@@ -229,12 +230,35 @@ impl Board {
                 return Ok(PlaceResult::Stop);
             }
 
-            self.counter += 1;
-
-            // Get the length of intersection
+            // Get the length of intersection. Needed for creating new block
             let intersection_len = cmp::min(self.current_block.end, self.prev_block.end)
                 - cmp::max(self.current_block.start, self.prev_block.start)
                 + 1;
+
+            // Cut block outside the intersection
+            let start_row = HEIGHT - 2 * (self.counter + 1);
+
+            if self.current_block.start < self.prev_block.start {
+                for row in start_row..=(start_row + 1) {
+                    for col in (self.current_block.start)..(self.prev_block.start) {
+                        stdout
+                            .queue(cursor::MoveTo(col, row))?
+                            .queue(style::Print(" "))?;
+                    }
+                }
+
+                self.current_block.start = self.prev_block.start;
+            } else if self.current_block.end > self.prev_block.end {
+                for row in start_row..=(start_row + 1) {
+                    for col in (self.prev_block.end + 1)..=(self.current_block.end) {
+                        stdout
+                            .queue(cursor::MoveTo(col, row))?
+                            .queue(style::Print(" "))?;
+                    }
+                }
+
+                self.current_block.end = self.prev_block.end;
+            }
 
             // Save state of current block to a temporary variable
             let tmp = self.current_block;
@@ -244,12 +268,12 @@ impl Board {
 
             // Set previous block to current block
             self.prev_block = tmp;
+
+            // Increase the counter
+            self.counter += 1;
         }
 
         // Directly draw the new block
-
-        // Access the standard output
-        let mut stdout = io::stdout();
 
         // Determine which row the renderer will start to draw the pixels
         let start_row = HEIGHT - 2 * (self.counter + 1);
