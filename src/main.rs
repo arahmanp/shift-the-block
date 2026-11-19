@@ -95,10 +95,10 @@ impl Block {
 /// The structure of a board in the game.
 #[derive(Debug)]
 struct Board {
-    /// Current active block that can be controlled by the player.
+    /// Position of current active block that can be controlled by the player.
     current_block: Block,
 
-    /// An already placed block before current block.
+    /// Position of an already placed block before current block.
     prev_block: Block,
 
     /// A counter represents how many blocks are already placed.
