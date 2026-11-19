@@ -1,33 +1,43 @@
 //! # Shift the Block!
-//! 
+//!
 //! Version 0.1.0
-//! 
+//!
 //! A simple terminal game made by a solo inexperienced programmer, Andhika Rahman, in His free time.
-//! 
+//!
 //! This is the original source code of Shift the Block! Game.
 
-use std::{cmp, io::{self, Write}, thread::sleep, time::Duration};
+use std::{
+    cmp,
+    io::{self, Write},
+    thread::sleep,
+    time::Duration,
+};
 
-use crossterm::{ExecutableCommand, QueueableCommand, cursor, event::{self, Event, KeyCode}, style::{self, Stylize}, terminal};
+use crossterm::{
+    ExecutableCommand, QueueableCommand, cursor,
+    event::{self, Event, KeyCode},
+    style::{self, Stylize},
+    terminal,
+};
 
 /// Width of the window required for the game.
 const WIDTH: u16 = 64;
 
 /// Height of the window required for the game.
-const HEIGHT: u16 = 27;     // Board (24) + Header (2) + Separator (1)
+const HEIGHT: u16 = 27; // Board (24) + Header (2) + Separator (1)
 
 /// Define directions of block movement.
 #[derive(PartialEq, Debug, Clone, Copy)]
 enum MoveDirection {
     Left,
-    Right
+    Right,
 }
 
 /// Define the possible result when player placed a block
 #[derive(Debug, PartialEq)]
 enum PlaceResult {
     Continue,
-    Stop
+    Stop,
 }
 
 /// The structure of a single block.
@@ -42,27 +52,27 @@ struct Block {
     /// Current block movement direction.
     direction: MoveDirection,
 
-    /// A flag to check whether a block is just placed on the board. 
-    /// We need this because a new block has different rendering pipeline 
+    /// A flag to check whether a block is just placed on the board.
+    /// We need this because a new block has different rendering pipeline
     /// with older one.
-    is_just_placed: bool
+    is_just_placed: bool,
 }
 
 impl Block {
-    /// A constructor. Returns a new block with the start value, end value, 
+    /// A constructor. Returns a new block with the start value, end value,
     /// and direction specified via the parameters.
     fn new(start: u16, end: u16, direction: MoveDirection) -> Self {
         Block {
             start,
             end,
             direction,
-            is_just_placed: true
+            is_just_placed: true,
         }
     }
 
-    /// A method that handles the block movement. In each shift, the block will 
-    /// move one step either to the left or right, depends on its current direction. 
-    /// This operation also depends on window width, because the block must know it for 
+    /// A method that handles the block movement. In each shift, the block will
+    /// move one step either to the left or right, depends on its current direction.
+    /// This operation also depends on window width, because the block must know it for
     /// direction switching.
     fn shift(&mut self) {
         // Switch the direction when touching left and right window edge
@@ -79,7 +89,7 @@ impl Block {
             MoveDirection::Left => {
                 self.start -= 1;
                 self.end -= 1;
-            },
+            }
             MoveDirection::Right => {
                 self.start += 1;
                 self.end += 1;
@@ -99,7 +109,6 @@ struct Board {
 
     /// A counter represents how many blocks are already placed.
     counter: u16,
-
 }
 
 impl Board {
@@ -133,41 +142,22 @@ impl Board {
         let start_row = HEIGHT - 2 * (self.counter + 1);
 
         // The new, just placed, block has different render handling
-        if self.current_block.is_just_placed {
-            for row in start_row..=(start_row + 1) {
-                for col in (self.current_block.start)..=(self.current_block.end) {
-                    stdout
-                        .queue(cursor::MoveTo(col, row))?
-                        .queue(style::PrintStyledContent(" ".on_white()))?;
-                }
-            }
+        // We use algorithm called "Lazy Rendering" (i named it by myself 😁)
+        // The idea is simple: We don't redraw all blocks from scratch in every frame
+        // instead, we just render the current active block. Because all previous blocks
+        // won't move again in the future. We can also optimize the rendering process, by
+        // just redrawing the previous column and the new one, we can ignore pixel between them.
+        let (prev_col, new_col) = match self.current_block.direction {
+            MoveDirection::Left => (self.current_block.end + 1, self.current_block.start),
+            MoveDirection::Right => (self.current_block.start - 1, self.current_block.end),
+        };
 
-            // Flag current block has been rendered before
-            self.current_block.is_just_placed = false;
-        } else {
-            // We use algorithm called "Lazy Rendering" (i named it by myself 😁)
-            // The idea is simple: We don't redraw all blocks from scratch in every frame
-            // instead, we just render the current active block. Because all previous blocks
-            // won't move again in the future. We can also optimize the rendering process, by
-            // just redrawing the previous column and the new one, we can ignore pixel between them.
-            let (prev_col, new_col) = match self.current_block.direction {
-                MoveDirection::Left => (
-                    self.current_block.end + 1,
-                    self.current_block.start
-                ),
-                MoveDirection::Right => (
-                    self.current_block.start - 1,
-                    self.current_block.end,
-                )
-            };
-
-            for row in start_row..=(start_row + 1) {
-                stdout
-                    .queue(cursor::MoveTo(prev_col, row))?
-                    .queue(style::Print(" "))?
-                    .queue(cursor::MoveTo(new_col, row))?
-                    .queue(style::PrintStyledContent(" ".on_white()))?;
-            }
+        for row in start_row..=(start_row + 1) {
+            stdout
+                .queue(cursor::MoveTo(prev_col, row))?
+                .queue(style::Print(" "))?
+                .queue(cursor::MoveTo(new_col, row))?
+                .queue(style::PrintStyledContent(" ".on_white()))?;
         }
 
         // Everytime rendering process done, move cursor to the inside of current block
@@ -181,7 +171,7 @@ impl Board {
     }
 
     /// A function to handle event when player places a block
-    fn place_block(&mut self) -> PlaceResult {
+    fn place_block(&mut self) -> io::Result<PlaceResult> {
         // If counter = 0, any block placement is valid and allowed
         if self.counter == 0 {
             self.counter += 1;
@@ -191,35 +181,52 @@ impl Board {
 
             // Create new block with same size as the first block
             self.current_block = Block::new(0, WIDTH / 2 - 1, MoveDirection::Right);
-
-            return PlaceResult::Continue;
         } else {
             self.counter += 1;
 
             // Check whether intersection occurs
-            if cmp::max(self.current_block.start, self.prev_block.start) > cmp::min(self.current_block.end, self.prev_block.end) {
-                return PlaceResult::Stop;
+            if cmp::max(self.current_block.start, self.prev_block.start)
+                > cmp::min(self.current_block.end, self.prev_block.end)
+            {
+                return Ok(PlaceResult::Stop);
             }
 
             // Get the length of intersection
-            let intersection_len = cmp::min(self.current_block.end, self.prev_block.end) - 
-                cmp::max(self.current_block.start, self.prev_block.start) + 1;
+            let intersection_len = cmp::min(self.current_block.end, self.prev_block.end)
+                - cmp::max(self.current_block.start, self.prev_block.start)
+                + 1;
 
             // Save state of current block to a temporary variable
             let tmp = self.current_block;
 
             // Create new block, start at position 0 with length intersection_length
-            self.current_block = Block::new(
-                0,
-                intersection_len - 1,
-                MoveDirection::Right
-            );
+            self.current_block = Block::new(0, intersection_len - 1, MoveDirection::Right);
 
             // Set previous block to current block
             self.prev_block = tmp;
-
-            return PlaceResult::Continue;
         }
+
+        // Directly draw the new block
+
+        // Access the standard output
+        let mut stdout = io::stdout();
+
+        // Determine which row the renderer will start to draw the pixels
+        let start_row = HEIGHT - 2 * (self.counter + 1);
+
+        // Start draw new block
+        for row in start_row..=(start_row + 1) {
+            for col in (self.current_block.start)..=(self.current_block.end) {
+                stdout
+                    .queue(cursor::MoveTo(col, row))?
+                    .queue(style::PrintStyledContent(" ".on_white()))?;
+            }
+        }
+
+        // Flush the standard output to apply commands
+        stdout.flush()?;
+
+        Ok(PlaceResult::Continue)
     }
 }
 
@@ -253,7 +260,7 @@ fn main() -> io::Result<()> {
                         }
 
                         delay /= 2;
-                    },
+                    }
                     KeyCode::Char('q') => break,
                     _ => {}
                 }
