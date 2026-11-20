@@ -294,6 +294,22 @@ impl Board {
     }
 }
 
+/// The structure oh player.
+#[derive(Debug)]
+struct Player {
+    /// Current player's score
+    score: f64
+}
+
+impl Player {
+    /// A contructor that returns new player with initial score = 100
+    fn new() -> Self {
+        Player {
+            score: 100.0
+        }
+    }
+}
+
 fn print_border() -> io::Result<()> {
     let mut stdout = io::stdout();
 
