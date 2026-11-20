@@ -348,7 +348,14 @@ impl Player {
 
         let text = format!("Score: {:.2}", self.score);
 
-        // Print player's score
+        // Clear previous score
+        for col in 1..=20 {
+            stdout
+                .queue(cursor::MoveTo(col, 1))?
+                .queue(style::Print(" "))?;
+        }
+
+        // Print new player's score
         stdout
             .queue(cursor::MoveTo(1, 1))?
             .queue(style::Print(text))?;
