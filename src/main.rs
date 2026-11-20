@@ -326,7 +326,7 @@ impl Player {
         // Access the standard output
         let mut stdout = io::stdout();
 
-        let text = format!("Score: {:03.2}", self.score);
+        let text = format!("Score: {:.2}", self.score);
 
         // Print player's score
         stdout
@@ -346,7 +346,7 @@ impl Player {
         // Print the updated score
         let mut stdout = io::stdout();
 
-        let text = format!("Score: {:03.2}", self.score);
+        let text = format!("Score: {:.2}", self.score);
 
         // Print player's score
         stdout
