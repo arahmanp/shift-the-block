@@ -187,9 +187,12 @@ impl Board {
     }
 
     /// A function to handle event when player places a block
-    fn place_block(&mut self) -> io::Result<PlaceResult> {
+    fn place_block(&mut self) -> io::Result<(PlaceResult, f64)> {
         // Access the standard output
         let mut stdout = io::stdout();
+
+        // Create penalty value of this block placement
+        let mut penalty = 0.0;
 
         // If counter = 0, any block placement is valid and allowed
         if self.counter == 0 {
@@ -203,9 +206,13 @@ impl Board {
             self.counter += 1;
         } else {
             // Check whether intersection occurs
+            // This condition below if there's no intersection
             if cmp::max(self.current_block.start, self.prev_block.start)
                 > cmp::min(self.current_block.end, self.prev_block.end)
             {
+                // Set penalty to 1
+                penalty = 1.0;
+                
                 // Mark dead block as red
 
                 // Get the current active row
@@ -227,15 +234,20 @@ impl Board {
                 stdout.flush()?;
 
                 // Return stop signal
-                return Ok(PlaceResult::Stop);
+                return Ok((PlaceResult::Stop, penalty));
             }
 
-            // Get the length of intersection. Needed for creating new block
+            // Get the length of intersection. Needed for creating new block and calculating penalty
             let intersection_len = cmp::min(self.current_block.end, self.prev_block.end)
                 - cmp::max(self.current_block.start, self.prev_block.start)
                 + 1;
 
-            // Cut block outside the intersection
+            // Calculate penalty
+            let prev_block_len = (self.prev_block.end - self.prev_block.start + 1) as f64;
+
+            penalty = 1.0 - (intersection_len as f64) / prev_block_len;
+
+            // Delete block outside the intersection
             let start_row = WINDOW_HEIGHT - 2 * (self.counter + 1) - 1;
 
             if self.current_block.start < self.prev_block.start {
@@ -290,7 +302,7 @@ impl Board {
         // Flush the standard output to apply commands
         stdout.flush()?;
 
-        Ok(PlaceResult::Continue)
+        Ok((PlaceResult::Continue, penalty))
     }
 }
 
@@ -378,7 +390,7 @@ fn main() -> io::Result<()> {
             if let Event::Key(k) = event::read()? {
                 match k.code {
                     KeyCode::Enter => {
-                        let result = board.place_block()?;
+                        let (result, penalty) = board.place_block()?;
 
                         if result == PlaceResult::Stop {
                             sleep(Duration::from_secs(5));
