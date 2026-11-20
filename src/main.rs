@@ -321,7 +321,7 @@ impl Player {
         }
     }
 
-    // A function for first-time player's score rendering.
+    /// A function for first-time player's score rendering.
     fn start(&self) -> io::Result<()> {
         // Access the standard output
         let mut stdout = io::stdout();
@@ -335,6 +335,26 @@ impl Player {
 
         stdout.flush()?;
         
+        Ok(())
+    }
+
+    /// A function for calculating new score and print the updated score to terminal.
+    fn update_score(&mut self, penalty: f64) -> io::Result<()> {
+        // Calculate new score
+        self.score -= self.score * penalty;
+
+        // Print the updated score
+        let mut stdout = io::stdout();
+
+        let text = format!("Score: {:03.2}", self.score);
+
+        // Print player's score
+        stdout
+            .queue(cursor::MoveTo(1, 1))?
+            .queue(style::Print(text))?;
+
+        stdout.flush()?;
+
         Ok(())
     }
 }
