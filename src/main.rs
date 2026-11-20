@@ -407,6 +407,9 @@ fn main() -> io::Result<()> {
     // Define frame delay
     let mut delay: u64 = 512;
 
+    // Create new player
+    let mut player = Player::new();
+
     // Create new board
     let mut board = Board::new();
 
@@ -419,6 +422,9 @@ fn main() -> io::Result<()> {
     // Print window border
     print_border()?;
 
+    // Print player's score for the first time
+    player.start()?;
+
     // Render board for the first time
     board.start()?;
 
@@ -428,6 +434,8 @@ fn main() -> io::Result<()> {
                 match k.code {
                     KeyCode::Enter => {
                         let (result, penalty) = board.place_block()?;
+
+                        player.update_score(penalty)?;
 
                         if result == PlaceResult::Stop {
                             sleep(Duration::from_secs(5));
