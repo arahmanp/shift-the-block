@@ -186,7 +186,7 @@ impl Board {
         Ok(())
     }
 
-    /// A function to handle event when player places a block
+    /// A function to handle event when player places a block.
     fn place_block(&mut self) -> io::Result<(PlaceResult, f64)> {
         // Access the standard output
         let mut stdout = io::stdout();
@@ -309,16 +309,33 @@ impl Board {
 /// The structure oh player.
 #[derive(Debug)]
 struct Player {
-    /// Current player's score
+    /// Current player's score.
     score: f64
 }
 
 impl Player {
-    /// A contructor that returns new player with initial score = 100
+    /// A contructor that returns new player with initial score = 100.
     fn new() -> Self {
         Player {
             score: 100.0
         }
+    }
+
+    // A function for first-time player's score rendering.
+    fn start(&self) -> io::Result<()> {
+        // Access the standard output
+        let mut stdout = io::stdout();
+
+        let text = format!("Score: {:03.2}", self.score);
+
+        // Print player's score
+        stdout
+            .queue(cursor::MoveTo(1, 1))?
+            .queue(style::Print(text))?;
+
+        stdout.flush()?;
+        
+        Ok(())
     }
 }
 
